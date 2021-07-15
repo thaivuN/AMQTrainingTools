@@ -35,7 +35,7 @@ class Ui_MainWindow(object):
         self.playerLayout = QtWidgets.QHBoxLayout(self.horizontalLayoutWidget)
         self.playerLayout.setContentsMargins(0, 0, 0, 0)
         self.playerLayout.setObjectName("playerLayout")
-        self.playerWidget = QVideoWidget(self.horizontalLayoutWidget)
+        self.playerWidget = QtWidgets.QFrame(self.horizontalLayoutWidget)
         self.playerWidget.setAutoFillBackground(False)
         self.playerWidget.setStyleSheet("background-color: black")
         self.playerWidget.setObjectName("playerWidget")
@@ -111,4 +111,3 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
         self.searchEdit.setPlaceholderText(_translate("MainWindow", "Search"))
         self.vidTimeLabel.setText(_translate("MainWindow", "0:00/0:00"))
-from PyQt5.QtMultimediaWidgets import QVideoWidget

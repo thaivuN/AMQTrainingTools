@@ -1,14 +1,20 @@
+"""
+    Main Driver file for the AnimeThemes.moe Video Player
+
+    Created_By: thaivuN
+
+"""
+
+
 from designer.player_ui import Ui_MainWindow
 from db_reader import ThemeDB
 from theme_grouper import ThemeClassification
-from time import sleep
-from PyQt5 import QtGui
-from PyQt5.QtCore import QDir, Qt, QUrl, QTime
-from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
-from PyQt5.QtMultimediaWidgets import QVideoWidget
 
-from PyQt5.QtWidgets import QMainWindow,QWidget, QPushButton, QAction, QApplication, QListWidgetItem, QStyle, QMessageBox
-from PyQt5.QtGui import QIcon
+from PyQt5 import QtGui
+from PyQt5.QtCore import Qt
+
+from PyQt5.QtWidgets import QMainWindow, QApplication, QListWidgetItem, QStyle
+
 from os import environ
 import sys
 import platform
@@ -19,18 +25,15 @@ environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
 environ["QT_SCREEN_SCALE_FACTORS"] = "1"
 environ["QT_SCALE_FACTOR"] = "1"
 
+# Callback method for VLC
+# Update the timer and slider positionm
 def onPositionChanged(event, window):
     duration = window.vlc_player.get_length()
     position = window.vlc_player.get_time()
     window.playerSlider.setValue(int(window.vlc_player.get_position()*1000))
     window.updatePlayerTimer(position, duration)
 
-def onDurationChanged(event, window):
-    duration = window.vlc_player.get_length()
-    position = window.vlc_player.get_time()
 
-
-        
 class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self,classifiedThemes: ThemeClassification, parent=None):
         super().__init__(parent)
@@ -39,8 +42,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.setWindowIcon(QtGui.QIcon("./assets/img/pepega-logo-small.png"))
         self.loadCategories(classifiedThemes)
         self.playButton.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay))
-        self.mediaPlayer = QMediaPlayer(None, QMediaPlayer.VideoSurface)
-        self.mediaPlayer.setVideoOutput(self.playerWidget)
         self.vlc_instance = vlc.Instance()
         self.vlc_player = self.vlc_instance.media_player_new()
 
@@ -91,20 +92,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 item.setHidden(not filter)
             else:
                 item.setHidden(False)
-        pass
-
-    def onDurationChanged(self, event):
-        #self.playerSlider.setRange(0,duration)
-        #self.updatePlayerTimer(0,duration)
-        if event.type == vlc.EventType.MediaDurationChanged:
-            print("Changed Duration")
-            print(f"Time: {self.vlc_player.get_length()}")
 
     def onSongClick(self, item):
         theme = item.data(Qt.ItemDataRole.UserRole)
         url = theme.getUrl()
-        #self.mediaPlayer.setMedia(QMediaContent(QUrl(url)))
-        #self.mediaPlayer.play()
 
         self.songLabel.setText(theme.basename)
 
@@ -114,19 +105,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.vlc_player.set_mrl(url)
         self.vlc_player.play()
 
-
     def onPlayClick(self):
         if self.vlc_player.is_playing():
             self.vlc_player.set_pause(1)
         else:
             self.vlc_player.play()
-
-    def onError(self):
-        # Create message box
-        msgBox = QMessageBox()
-        msgBox.setIcon((QMessageBox.Warning))
-        msgBox.setText("Error message:")
-        msgBox.setInformativeText(self.mediaPlayer.errorString())
 
     def loadCategories(self, tc: ThemeClassification):
         for k in tc.categories:
@@ -135,13 +118,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def loadVideoList(self, key):
         for theme in tc.categories[key]:
             item = QListWidgetItem(theme.filename)
-            #item.setText(theme.filename)
-            item.setData(Qt.ItemDataRole.UserRole,theme)
+            item.setData(Qt.ItemDataRole.UserRole, theme)
             self.videoListWidget.addItem(item)
 
     def updatePlayerTimer(self, position, duration):
-        #p = buildTime(position)
-        #d = buildTime(duration)
         self.vidTimeLabel.setText(f"{position/1000} / {duration/1000}")
 
 
