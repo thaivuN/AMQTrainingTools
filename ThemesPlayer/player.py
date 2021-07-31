@@ -42,8 +42,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.setWindowIcon(QtGui.QIcon("./assets/img/pepega-logo-small.png"))
         self.loadCategories(classifiedThemes)
         self.playButton.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay))
+        self.volumeSlider.setMaximum(100)
+        self.volumeSlider.setValue(100)
         self.vlc_instance = vlc.Instance()
-        self.vlc_player = self.vlc_instance.media_player_new()
+        self.vlc_player: vlc.MediaPlayer = self.vlc_instance.media_player_new()
+        self.vlc_player.audio_set_volume(100)
 
         self.playerSlider.setMaximum(1000)
         if platform.system() == "Windows":
@@ -66,6 +69,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.searchEdit.textChanged.connect(self.onSearchChange)
 
         self.playerSlider.sliderMoved.connect(self.onSliderMoved)
+        self.volumeSlider.sliderMoved.connect(self.onVolumeSliderMoved)
 
 
         self.eventmanager = self.vlc_player.event_manager()
@@ -111,15 +115,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         else:
             self.vlc_player.play()
 
+    def onVolumeSliderMoved(self, volume):
+        self.vlc_player.audio_set_volume(volume)
+
     def loadCategories(self, tc: ThemeClassification):
         for k in tc.categories:
             self.yearListWidget.addItem(k)
+
+        self.yearListWidget.sortItems(Qt.SortOrder.AscendingOrder)
 
     def loadVideoList(self, key):
         for theme in tc.categories[key]:
             item = QListWidgetItem(theme.filename)
             item.setData(Qt.ItemDataRole.UserRole, theme)
             self.videoListWidget.addItem(item)
+
+        self.videoListWidget.sortItems(Qt.SortOrder.AscendingOrder)
 
     def updatePlayerTimer(self, position, duration):
         self.vidTimeLabel.setText(f"{position/1000} / {duration/1000}")
