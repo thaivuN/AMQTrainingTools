@@ -104,20 +104,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         theme = item.data(Qt.ItemDataRole.UserRole)
         url = theme.getUrl()
 
-        #self.vlc_player.stop()
         if hasattr(self, 'media') and self.media:
             prev_media_name = self.media.get_meta(0)
             if prev_media_name:
                 self.vlc_instance.vlm_del_media(prev_media_name)
         self.media = self.vlc_instance.media_new(mrl=url)
-        #print("Reached")
-        #self.vlc_player.set_mrl(url)
-        #self.vlc_player.set_media(self.media)
+        
         self.loadMediaToPlayer(self.media)
         self.media.parse()
         print(f"meta {self.media.get_meta(0)}")
-        self.vlc_player.play()
-        sleep(2)
+        
         self.songLabel.setText(theme.basename)
 
     def onPlayClick(self):
@@ -155,23 +151,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
         if sys.version < '3':
             fileName = unicode(fileName)
-        #print("0 reachedd")
-        
-        print("0 reachedd")
         if hasattr(self, 'media') and self.media:
             prev_media_name = self.media.get_meta(0)
             if prev_media_name:
                 self.vlc_instance.vlm_del_media(prev_media_name)
-        print("1 reached")
         self.media = self.vlc_instance.media_new(fileName)
-        print("2 reached")
-        self.loadMediaToPlayer(self.media)
+        
         #self.vlc_player.set_media(self.media)
         self.media.parse()
+        self.loadMediaToPlayer(self.media)
         self.songLabel.setText(self.media.get_meta(0))
         
-        #self.vlc_player.play()
-        sleep(2)
+
+        
 
     def onQuit(self):
         print("onQuit clicked")
