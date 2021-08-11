@@ -11,14 +11,20 @@ from db_reader import ThemeDB
 from theme_grouper import ThemeClassification
 
 from PyQt5 import QtGui
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QDir
 
-from PyQt5.QtWidgets import QMainWindow, QApplication, QListWidgetItem, QStyle
+from PyQt5.QtWidgets import QMainWindow, QApplication, QListWidgetItem, QStyle, QFileDialog
 
 from os import environ
 import sys
 import platform
 import vlc
+from time import sleep
+
+try:
+    unicode
+except NameError:
+    unicode = str
 
 environ["QT_DEVICE_PIXEL_RATIO"] = "0"
 environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
@@ -35,8 +41,9 @@ def onPositionChanged(event, window):
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
-    def __init__(self,classifiedThemes: ThemeClassification, parent=None):
+    def __init__(self,classifiedThemes: ThemeClassification,app: QApplication, parent=None):
         super().__init__(parent)
+        self.app = app
         self.setupUi(self)
         self.setWindowTitle("AnimeThemes Player")
         self.setWindowIcon(QtGui.QIcon("./assets/img/pepega-logo-small.png"))
@@ -48,19 +55,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.vlc_player: vlc.MediaPlayer = self.vlc_instance.media_player_new()
         self.vlc_player.audio_set_volume(100)
 
-        self.playerSlider.setMaximum(1000)
-        if platform.system() == "Windows":
-            self.vlc_player.set_hwnd(int(self.playerWidget.winId()))
-        elif platform.system() == "Linux":
-            self.vlc_player.set_xwindow(int(self.playerWidget.winId()))
-        elif platform.system() == "Darwin":
-            self.vlc_player.set_nsobject(int(self.playerWidget.winId()))
-        else:
-            print("Player not supported")
 
         self.connectEvents()
 
+        
 
+    # Holds the responsibilty of connecting app events to proper handler functions
     def connectEvents(self):
         self.yearListWidget.itemClicked.connect(self.onYearClick)
         self.videoListWidget.itemClicked.connect(self.onSongClick)
@@ -68,6 +68,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.playButton.clicked.connect(self.onPlayClick)
         self.searchEdit.textChanged.connect(self.onSearchChange)
 
+        self.action_Open.triggered.connect(self.onOpenFile)
+        self.actionQuit.triggered.connect(self.onQuit)
+        self.fileButton.clicked.connect(self.onOpenFile)
         self.playerSlider.sliderMoved.connect(self.onSliderMoved)
         self.volumeSlider.sliderMoved.connect(self.onVolumeSliderMoved)
 
@@ -101,13 +104,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         theme = item.data(Qt.ItemDataRole.UserRole)
         url = theme.getUrl()
 
-        self.songLabel.setText(theme.basename)
-
-        if self.vlc_player.is_playing():
-            self.vlc_player.stop()
-
-        self.vlc_player.set_mrl(url)
+        #self.vlc_player.stop()
+        if hasattr(self, 'media') and self.media:
+            prev_media_name = self.media.get_meta(0)
+            if prev_media_name:
+                self.vlc_instance.vlm_del_media(prev_media_name)
+        self.media = self.vlc_instance.media_new(mrl=url)
+        #print("Reached")
+        #self.vlc_player.set_mrl(url)
+        #self.vlc_player.set_media(self.media)
+        self.loadMediaToPlayer(self.media)
+        self.media.parse()
+        print(f"meta {self.media.get_meta(0)}")
         self.vlc_player.play()
+        sleep(2)
+        self.songLabel.setText(theme.basename)
 
     def onPlayClick(self):
         if self.vlc_player.is_playing():
@@ -135,6 +146,54 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def updatePlayerTimer(self, position, duration):
         self.vidTimeLabel.setText(f"{position/1000} / {duration/1000}")
 
+    def onOpenFile(self):
+        
+        print("onOpenFile clicked")
+        #self.vlc_player.stop()
+        fileName,_ = QFileDialog.getOpenFileName(self, "Open video",QDir.homePath())
+        if not fileName:
+            return
+        if sys.version < '3':
+            fileName = unicode(fileName)
+        #print("0 reachedd")
+        
+        print("0 reachedd")
+        if hasattr(self, 'media') and self.media:
+            prev_media_name = self.media.get_meta(0)
+            if prev_media_name:
+                self.vlc_instance.vlm_del_media(prev_media_name)
+        print("1 reached")
+        self.media = self.vlc_instance.media_new(fileName)
+        print("2 reached")
+        self.loadMediaToPlayer(self.media)
+        #self.vlc_player.set_media(self.media)
+        self.media.parse()
+        self.songLabel.setText(self.media.get_meta(0))
+        
+        #self.vlc_player.play()
+        sleep(2)
+
+    def onQuit(self):
+        print("onQuit clicked")
+        self.close()
+        
+    def loadMediaToPlayer(self, media):
+        self.vlc_player.set_media(media)
+        
+        self.playerSlider.setMaximum(1000)
+        if platform.system() == "Windows":
+            self.vlc_player.set_hwnd(int(self.playerWidget.winId()))
+        elif platform.system() == "Linux":
+            self.vlc_player.set_xwindow(int(self.playerWidget.winId()))
+        elif platform.system() == "Darwin":
+            self.vlc_player.set_nsobject(int(self.playerWidget.winId()))
+        else:
+            print("Player not supported")
+        sleep(1)
+        self.vlc_player.play()
+
+        
+        
 
 if __name__ == "__main__":
     db = ThemeDB()
@@ -144,6 +203,6 @@ if __name__ == "__main__":
 
     app = QApplication(sys.argv)
 
-    player = MainWindow(tc)
+    player = MainWindow(tc,app)
     player.show()
     sys.exit(app.exec_())
