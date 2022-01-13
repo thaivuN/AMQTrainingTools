@@ -157,6 +157,8 @@ class Ui_MainWindow(object):
         self.songLabel.setStyleSheet("background-color: #616E7C;")
         self.songLabel.setText("")
         self.songLabel.setAlignment(QtCore.Qt.AlignCenter)
+        self.songLabel.setOpenExternalLinks(True)
+        self.songLabel.setTextInteractionFlags(QtCore.Qt.LinksAccessibleByMouse|QtCore.Qt.TextSelectableByMouse)
         self.songLabel.setObjectName("songLabel")
         self.volumeSlider = QtWidgets.QSlider(self.centralwidget)
         self.volumeSlider.setGeometry(QtCore.QRect(130, 520, 160, 22))

@@ -62,6 +62,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.vlc_player: vlc.MediaPlayer = self.vlc_instance.media_player_new()
         self.vlc_player.audio_set_volume(100)
 
+        self.setStyleSheet("""
+            QToolTip{
+                background-color: #121212
+            }
+        
+        """)
 
         self.connectEvents()
 
@@ -120,7 +126,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.media.parse()
         print(f"meta {self.media.get_meta(0)}")
         
-        self.songLabel.setText(theme.basename)
+
+        url_tag = f'<a href="{theme.mal_link}">{theme.basename}</a>'
+        print(f"url = {url_tag}")
+        self.songLabel.setText(url_tag)
+        self.songLabel.setToolTip(theme.mal_link)
+        #self.songLabel.setText(theme.basename)
+        
 
     def onPlayClick(self):
         if self.vlc_player.is_playing():
@@ -141,6 +153,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         for theme in tc.categories[key]:
             item = QListWidgetItem(theme.filename)
             item.setData(Qt.ItemDataRole.UserRole, theme)
+            item.setToolTip(theme.show_name)
             self.videoListWidget.addItem(item)
 
         self.videoListWidget.sortItems(Qt.SortOrder.AscendingOrder)
@@ -173,8 +186,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         self.loadMediaToPlayer(self.media)
         self.media.parse()
-        self.songLabel.setText(theme.basename)
-        print(f"meta {self.media.get_meta(0)}")
+        
+        url_tag = f'<a href="{theme.mal_link}">{theme.basename}</a>'
+        print(f"url = {url_tag}")
+        self.songLabel.setText(url_tag)
+        self.songLabel.setToolTip(theme.mal_link)
+
         
 
     def onQuit(self):
