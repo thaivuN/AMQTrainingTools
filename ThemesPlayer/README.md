@@ -12,9 +12,10 @@ Install the dependencies:
 - You also need VLC
 - If you want to update the database file, get MySQL. If not, don't.
 
-Running the app:
+Executable File:
 
-`python player.py`
+`player.exe`
+
 
 ### How to update the DB file?
 
