@@ -7,7 +7,7 @@ class ThemeDB:
 
     def getAllRows(self):
         cursor = self.db.cursor()
-        cursor.execute ("SELECT * FROM videos")
+        cursor.execute ("SELECT video_id, created_at, updated_at, filename, path, basename, size FROM videos")
         rows = cursor.fetchall()
         return rows
 

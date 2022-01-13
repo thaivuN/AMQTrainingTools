@@ -9,6 +9,7 @@
 from designer.player_ui import Ui_MainWindow
 from db_reader import ThemeDB
 from theme_grouper import ThemeClassification
+from random_theme import randomTheme
 
 from PyQt5 import QtGui
 from PyQt5.QtCore import Qt, QDir
@@ -19,6 +20,7 @@ from os import environ
 import sys
 import platform
 import vlc
+from enum import Enum
 from time import sleep
 
 try:
@@ -30,6 +32,10 @@ environ["QT_DEVICE_PIXEL_RATIO"] = "0"
 environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
 environ["QT_SCREEN_SCALE_FACTORS"] = "1"
 environ["QT_SCALE_FACTOR"] = "1"
+
+class AniMediaType(Enum):
+    MRL = 1,
+    FILE = 2
 
 # Callback method for VLC
 # Update the timer and slider positionm
@@ -43,6 +49,7 @@ def onPositionChanged(event, window):
 class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self,classifiedThemes: ThemeClassification,app: QApplication, parent=None):
         super().__init__(parent)
+        self.classifiedThemes = classifiedThemes
         self.app = app
         self.setupUi(self)
         self.setWindowTitle("AnimeThemes Player")
@@ -67,8 +74,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.yearListWidget.currentItemChanged.connect(self.onYearChanged)
         self.playButton.clicked.connect(self.onPlayClick)
         self.searchEdit.textChanged.connect(self.onSearchChange)
+        self.rdnButton.clicked.connect(self.onPlayRandom)
 
         self.action_Open.triggered.connect(self.onOpenFile)
+        self.actionRandom.triggered.connect(self.onPlayRandom)
         self.actionQuit.triggered.connect(self.onQuit)
         self.fileButton.clicked.connect(self.onOpenFile)
         self.playerSlider.sliderMoved.connect(self.onSliderMoved)
@@ -82,6 +91,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def onSliderMoved(self,position):
         self.vlc_player.set_position(position/1000)
 
+    # Year column handler
     def onYearClick(self, item):
         key = item.text()
         self.loadVideoList(key)
@@ -104,12 +114,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         theme = item.data(Qt.ItemDataRole.UserRole)
         url = theme.getUrl()
 
-        if hasattr(self, 'media') and self.media:
-            prev_media_name = self.media.get_meta(0)
-            if prev_media_name:
-                self.vlc_instance.vlm_del_media(prev_media_name)
-        self.media = self.vlc_instance.media_new(mrl=url)
-        
+        self.setupMedia(url, AniMediaType.MRL)
+
         self.loadMediaToPlayer(self.media)
         self.media.parse()
         print(f"meta {self.media.get_meta(0)}")
@@ -151,18 +157,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
         if sys.version < '3':
             fileName = unicode(fileName)
-        if hasattr(self, 'media') and self.media:
-            prev_media_name = self.media.get_meta(0)
-            if prev_media_name:
-                self.vlc_instance.vlm_del_media(prev_media_name)
-        self.media = self.vlc_instance.media_new(fileName)
+        
+        self.setupMedia(fileName, AniMediaType.FILE)
         
         #self.vlc_player.set_media(self.media)
         self.media.parse()
         self.loadMediaToPlayer(self.media)
         self.songLabel.setText(self.media.get_meta(0))
         
-
+    def onPlayRandom(self):
+        theme = randomTheme(self.classifiedThemes)
+        print("onPlayRandom clicked")
+        url = theme.getUrl()
+        self.setupMedia(url, AniMediaType.MRL)
+        
+        self.loadMediaToPlayer(self.media)
+        self.media.parse()
+        self.songLabel.setText(theme.basename)
+        print(f"meta {self.media.get_meta(0)}")
         
 
     def onQuit(self):
@@ -184,12 +196,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         sleep(1)
         self.vlc_player.play()
 
-        
+
+    def setupMedia(self, media, mediaType: AniMediaType):
+        if hasattr(self, 'media') and self.media:
+            prev_media_name = self.media.get_meta(0)
+            if prev_media_name:
+                self.vlc_instance.vlm_del_media(prev_media_name)
+        if mediaType == AniMediaType.MRL:
+            self.media = self.vlc_instance.media_new(mrl = media)
+        else:
+            self.media = self.vlc_instance.media_new(media)
+
         
 
 if __name__ == "__main__":
     db = ThemeDB()
     tc = ThemeClassification()
+    
     tc.addThemes(db.getThemes())
     db.close()
 
