@@ -28,12 +28,13 @@ If you want to update the the database used by this program, for now it's going 
 - Find and Download the MySQL dump. They update it every week.
 - Create a MySQL schema/database
 - Run the dump file on that MySQL database/schema
-- Delete themes.db
 - Get <a href="https://pypi.org/project/mysql-to-sqlite3/">mysql-to-sqlite3</a> and convert the MySQL schema into a SQLite file
    
 `pip install mysql-to-sqlite3`
    
-`mysql2sqlite -f themes.db -d <NAME_OF_THE_DB_YOU_DUMPED_THE_DATA> -u <DB_USERNAME> -t videos -p`
+`mysql2sqlite -f themes.db -d <NAME_OF_THE_DB_YOU_DUMPED_THE_DATA> -u <DB_USERNAME> -p`
+
+- Update CURR_DB in setting.py file with the location of the db file generated
 
 Else, you could always wait for me to update that themes.db file on this repo (don't trust me on that).
 

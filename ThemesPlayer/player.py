@@ -127,10 +127,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         print(f"meta {self.media.get_meta(0)}")
         
 
-        url_tag = f'<a href="{theme.mal_link}">{theme.basename}</a>'
-        print(f"url = {url_tag}")
-        self.songLabel.setText(url_tag)
-        self.songLabel.setToolTip(theme.mal_link)
+        header_text = f'<b>{theme.show_name} {theme.slug}</b> |-| <b>{theme.song}</b> by <b>{theme.artist}</b> |-| <a href="{theme.mal_link}">MAL Link</a>'
+        print(f"header_text = {header_text}")
+        self.songLabel.setText(header_text)
+        self.songLabel.setToolTip(header_text)
         #self.songLabel.setText(theme.basename)
         
 
@@ -187,10 +187,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.loadMediaToPlayer(self.media)
         self.media.parse()
         
-        url_tag = f'<a href="{theme.mal_link}">{theme.basename}</a>'
-        print(f"url = {url_tag}")
-        self.songLabel.setText(url_tag)
-        self.songLabel.setToolTip(theme.mal_link)
+        header_text = f'<b>{theme.show_name} {theme.slug}</b> |-| <b>{theme.song}</b> by <b>{theme.artist}</b> |-| <a href="{theme.mal_link}">MAL Link</a>'
+        print(f"header_text = {header_text}")
+        self.songLabel.setText(header_text)
+        self.songLabel.setToolTip(header_text)
 
         
 
